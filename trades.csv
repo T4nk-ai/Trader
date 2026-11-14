@@ -1,0 +1,2 @@
+id,ts_utc,mode,strategy,symbol,side,quantity,price_usd,fee_usd,usd_per_aud,value_aud,fee_aud
+1,2026-11-14T14:25:17+00:00,paper,trend_200,SPY,buy,6.628047287622138,754.747180114746,2.50125,0.6774150133132935,7384.69018502019,3.6923450925100956
