@@ -16,7 +16,7 @@ jobs:
           python-version: "3.12"
       - run: pip install -e .
       - run: python -m trader.report | tee -a "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: backtest-report
           path: reports/
