@@ -1,0 +1,29 @@
+# Paper-trading configuration. No real money is involved in "paper" mode, and there is
+# no live mode in this code yet.
+mode = "paper"
+starting_cash_usd = 10000
+
+# Each entry: which strategy runs on which symbol, and the share of the account it may use.
+# Chosen from the Phase 1 backtests: the 200-day trend filter did not beat buy-and-hold on
+# return, but it roughly halved the worst drops. The weekly-dip rule was dropped.
+[[strategies]]
+symbol = "SPY"
+strategy = "trend_200"
+allocation = 0.50
+
+[[strategies]]
+symbol = "BTC-USD"
+strategy = "trend_200"
+allocation = 0.25
+
+[costs]
+fee_bps = 5
+slippage_bps = 5
+
+[risk]
+max_position_frac = 0.50     # one symbol at most half the account
+max_gross_exposure = 1.0     # no leverage
+daily_loss_limit = 0.03      # no new buys after a 3% down day
+max_drawdown_limit = 0.20    # kill switch trips 20% below the account's peak
+max_orders_per_day = 6
+max_price_deviation = 0.08

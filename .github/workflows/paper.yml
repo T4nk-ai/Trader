@@ -1,0 +1,60 @@
+# Daily paper-trading run. Simulated money only: this workflow has no broker access.
+# The paper account and trade journal are stored on the `paper-state` branch.
+#
+# Kill switch from your phone: Actions -> paper -> Run workflow -> type a reason in
+# "kill_reason". To clear it later, delete the file `KILL` on the `paper-state` branch.
+name: paper
+on:
+  schedule:
+    - cron: "30 22 * * *" # 22:30 UTC, after the US market close (about 9:30 am AEDT)
+  workflow_dispatch:
+    inputs:
+      kill_reason:
+        description: "Turn the kill switch ON with this reason (leave empty for a normal run)"
+        required: false
+        default: ""
+permissions:
+  contents: write
+concurrency:
+  group: paper
+  cancel-in-progress: false
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Restore paper account
+        run: |
+          if git fetch origin paper-state 2>/dev/null; then
+            git worktree add state origin/paper-state --detach
+          else
+            git worktree add --detach state
+            git -C state checkout --orphan paper-state
+            git -C state rm -rfq . || true
+          fi
+      - name: Turn kill switch on
+        if: ${{ inputs.kill_reason != '' }}
+        env:
+          REASON: ${{ inputs.kill_reason }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m trader.runner --kill "$REASON"
+      - name: Run one paper cycle
+        if: ${{ inputs.kill_reason == '' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m trader.runner | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Save paper account
+        if: always()
+        run: |
+          cd state
+          python -m trader.runner --state-dir . --export-trades trades.csv || true
+          git add -A
+          git -c user.name="paper-bot" -c user.email="paper-bot@users.noreply.github.com" \
+            commit -qm "paper run $(date -u +%F)" || exit 0
+          git push origin HEAD:paper-state
