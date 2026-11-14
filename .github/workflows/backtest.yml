@@ -1,9 +1,13 @@
 # Run the Phase 1 backtests on GitHub's servers (they can download market data).
-# Start it from the repo's Actions tab -> "backtest" -> "Run workflow".
+# It runs automatically when strategy code changes, or start it from the repo's Actions tab -> "backtest" -> "Run workflow".
 # The report and charts appear as a downloadable artifact on the run page.
 name: backtest
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "trader/**"
+      - ".github/workflows/backtest.yml"
 permissions:
   contents: read
 jobs:
