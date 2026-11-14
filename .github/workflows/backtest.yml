@@ -1,0 +1,22 @@
+# Run the Phase 1 backtests on GitHub's servers (they can download market data).
+# Start it from the repo's Actions tab -> "backtest" -> "Run workflow".
+# The report and charts appear as a downloadable artifact on the run page.
+name: backtest
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - run: python -m trader.report | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backtest-report
+          path: reports/
